@@ -1,3 +1,5 @@
+
+
 # Whiteboard
 
 A fast, simple infinite whiteboard for Windows. Native C++ / Win32 with Direct3D 11 + Direct2D. It ships as a single ~350 KB `.exe` with no DLLs and nothing to install.
@@ -92,3 +94,4 @@ With the stats panel open (`F3`): `F9` adds a 1M-point stress test (one `Ctrl+Z`
 | `tools/make_icon.ps1` | Regenerates `src/res/app.ico` |
 
 Pen pressure isn't used yet. A pen works, but as a mouse with constant width.
+(Didn't make any of this; it was entirely Claude; just wanted a fast whiteboard dunno why it wrote a whole readME )
