@@ -18,28 +18,39 @@ Output: `build/Release/Whiteboard.exe`
 | Action | Mouse | Keyboard |
 |---|---|---|
 | Draw | Left-drag (single click = dot) | `P` pen |
-| Erase whole strokes | Right-drag (any tool), or left-drag with the eraser | `E` eraser |
+| Erase whole strokes | Right-drag (any tool)\*, or left-drag with the eraser | `E` eraser |
 | Cancel the current stroke / erase | | `Esc` |
 | Pen color | Toolbar swatches, **+** = custom color | `1`–`8`, `9` custom |
 | Pen width | Toolbar dots | `,` thinner · `.` thicker |
 | Undo / redo | Toolbar arrows | `Ctrl+Z` · `Ctrl+Y` / `Ctrl+Shift+Z` |
 | Clear board (undoable) | Right-click menu | `Ctrl+Del` |
 | Zoom (around the cursor, smooth) | `Ctrl`+wheel, touchpad pinch | `+` / `-`, `Ctrl+0` = 100% |
-| Pan | Middle-drag, `Space`+drag, wheel (`Shift`+wheel = sideways) | |
+| Pan | Middle-drag\*, `Space`+drag, wheel (`Shift`+wheel = sideways) | |
 | Reset view | | `Home` |
 | Grid: lines / dots / off | Toolbar grid button | `G` |
 | Grid size | Toolbar grid button → size | `[` / `]` presets, `Shift+[` / `Shift+]` ±1 px |
 | Dark / light mode | Toolbar sun/moon | `D` |
 | New / Open / Save / Save as | Right-click menu, or drop a `.wbd` file on the window | `Ctrl+N` · `Ctrl+O` · `Ctrl+S` · `Ctrl+Shift+S` |
+| Swap middle / right mouse buttons | Right-click menu | `M` |
 | Fullscreen | | `F11` (`Esc` leaves) |
 | Shortcut line at the bottom | | `F1` |
 | Stats panel | | `F3` |
 
 Everything else is in the right-click menu.
 
+\* **Swapping the buttons** (`M`, or *Swap middle / right mouse buttons* in the menu) swaps these roles:
+
+| | Normal | Swapped |
+|---|---|---|
+| Pan | middle-drag | right-drag |
+| Erase with any tool | right-drag | middle-drag |
+| Menu | right-click | middle-click |
+
+The setting is remembered, and the hint line, tooltips and menu always name the button that's currently active.
+
 ## Saving
 
-- **Your session is restored automatically.** When you close the app (or every 30 s if something changed), the board is saved to `%LOCALAPPDATA%\Whiteboard\session.wbd`, together with its file name, unsaved changes, view, grid, theme, pen and window position. Next start brings it all back, so there's no "save?" prompt on exit.
+- **Your session is restored automatically.** When you close the app (or every 30 s if something changed), the board is saved to `%LOCALAPPDATA%\Whiteboard\session.wbd`, together with its file name, unsaved changes, view, grid, theme, pen, mouse-button setting and window position. Next start brings it all back, so there's no "save?" prompt on exit.
 - **`Ctrl+S` saves to a `.wbd` file** of your choice. The title bar shows `*` while there are unsaved changes.
 - **The `.wbd` format** is compact binary (~8 bytes per point) with a checksum. Damaged files are refused instead of half-loaded, and saving never leaves a half-written file. The format is described in [src/FileIO.h](src/FileIO.h).
 

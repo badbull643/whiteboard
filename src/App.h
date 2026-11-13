@@ -105,6 +105,10 @@ private:
     void RestoreSession();
     BackgroundWriter m_writer;
     bool m_showHelp = true;          // F1: hint line at the bottom
+    // M: swap middle and right mouse buttons. Off: middle = pan, right = menu / drag to erase.
+    // On: right = pan, middle = menu / drag to erase.
+    bool m_swapButtons = false;
+    void SetSwapButtons(bool swap);
     bool m_startMaximized = false;   // from the session
     bool m_restoredWindow = false;
     DocView m_restoredView;

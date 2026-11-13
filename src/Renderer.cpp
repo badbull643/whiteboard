@@ -781,9 +781,15 @@ bool Renderer::Render(const RenderParams& params)
 
 void Renderer::DrawHud(const RenderParams& params)
 {
-    static constexpr wchar_t kHint[] =
+    // The mouse-button parts follow the "swap middle / right" setting (M).
+    static constexpr wchar_t kHintNormal[] =
         L"1-9 color    , . width    E eraser / right-drag    Ctrl+Z / Y undo / redo    Ctrl+Wheel zoom    "
-        L"Middle / Space+drag pan    G [ ] grid    Right-click menu    F1 hide";
+        L"Middle / Space+drag pan    G [ ] grid    Right-click menu    M swap buttons    F1 hide";
+    static constexpr wchar_t kHintSwapped[] =
+        L"1-9 color    , . width    E eraser / middle-drag    Ctrl+Z / Y undo / redo    Ctrl+Wheel zoom    "
+        L"Right / Space+drag pan    G [ ] grid    Middle-click menu    M swap buttons    F1 hide";
+    const wchar_t* hint = params.swapButtons ? kHintSwapped : kHintNormal;
+    const UINT32 hintLen = static_cast<UINT32>(params.swapButtons ? ARRAYSIZE(kHintSwapped) : ARRAYSIZE(kHintNormal)) - 1;
     const D2D1_SIZE_F size = m_dc->GetSize();
     const float pad = 12.0f * m_dpiScale;
     const D2D1_RECT_F rect{ pad, size.height - pad - 18.0f * m_dpiScale, size.width - pad, size.height - pad };
@@ -798,6 +804,7 @@ void Renderer::DrawHud(const RenderParams& params)
     }
 
     // Status (right): tool, grid mode, size, zoom.
+    float statusWidth = 0.0f;
     if (params.camera && params.grid) {
         const wchar_t* mode = params.grid->mode == GridMode::Lines ? L"Lines"
                             : params.grid->mode == GridMode::Dots  ? L"Dots" : L"Grid off";
@@ -807,13 +814,27 @@ void Renderer::DrawHud(const RenderParams& params)
             ? swprintf_s(status, L"%ls    %ls    %.0f%%", tool, mode, params.camera->zoom * 100.0)
             : swprintf_s(status, L"%ls    %ls  %d px    %.0f%%", tool, mode, params.grid->size,
                          params.camera->zoom * 100.0);
-        if (n > 0)
+        if (n > 0) {
             m_dc->DrawTextW(status, static_cast<UINT32>(n), m_statusFormat.Get(), rect, m_textBrush.Get());
+            ComPtr<IDWriteTextLayout> layout;
+            DWRITE_TEXT_METRICS m{};
+            if (SUCCEEDED(m_dwFactory->CreateTextLayout(status, static_cast<UINT32>(n), m_statusFormat.Get(),
+                                                        rect.right - rect.left, 100.0f, &layout)))
+                layout->GetMetrics(&m);
+            statusWidth = m.width;
+        }
     }
 
-    // Hint (left) only when enabled (F1) and there's room for it.
-    if (params.showHint && size.width > 1240.0f * m_dpiScale)
-        m_dc->DrawTextW(kHint, ARRAYSIZE(kHint) - 1, m_hintFormat.Get(), rect, m_hintBrush.Get());
+    // Hint (left) only when enabled (F1) and it fits next to the status text.
+    if (params.showHint) {
+        ComPtr<IDWriteTextLayout> layout;
+        if (SUCCEEDED(m_dwFactory->CreateTextLayout(hint, hintLen, m_hintFormat.Get(), 10000.0f, 100.0f, &layout))) {
+            DWRITE_TEXT_METRICS m{};
+            layout->GetMetrics(&m);
+            if (m.width + statusWidth + 24.0f * m_dpiScale <= rect.right - rect.left)
+                m_dc->DrawTextLayout({ rect.left, rect.top }, layout.Get(), m_hintBrush.Get());
+        }
+    }
 }
 
 void Renderer::DrawStats(const RenderParams& params)

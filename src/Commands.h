@@ -27,6 +27,7 @@ enum CommandId : UINT {
     ID_FILE_SAVE,
     ID_FILE_SAVE_AS,
     ID_HELP,
+    ID_SWAP_BUTTONS,    // swap middle and right mouse button roles
     ID_GRID_SIZE_BASE = 200,  // + grid preset index
     ID_COLOR_BASE = 300,      // + palette index
     ID_WIDTH_BASE = 400,      // + pen width index

@@ -28,7 +28,7 @@ struct ToolbarButton {
 // Floating toolbar at the top center. Pure layout + hit testing; drawn by the Renderer.
 class Toolbar {
 public:
-    void Layout(float viewportWidth, float dpiScale);
+    void Layout(float viewportWidth, float dpiScale, bool swapButtons);  // swap: tooltips name the right button
     int HitTest(float x, float y) const;  // button index or -1
     bool Contains(float x, float y) const;
 

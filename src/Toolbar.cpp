@@ -1,7 +1,7 @@
 #include "Toolbar.h"
 #include <cmath>
 
-void Toolbar::Layout(float viewportWidth, float s)
+void Toolbar::Layout(float viewportWidth, float s, bool swapButtons)
 {
     m_dpiScale = s;
     m_buttons.clear();
@@ -24,7 +24,7 @@ void Toolbar::Layout(float viewportWidth, float s)
     };
 
     add(ID_TOOL_PEN, button, L"Pen  (P)");
-    add(ID_TOOL_ERASER, button, L"Eraser  (E, or right-drag)");
+    add(ID_TOOL_ERASER, button, swapButtons ? L"Eraser  (E, or middle-drag)" : L"Eraser  (E, or right-drag)");
     separator();
     for (int i = 0; i < kPaletteSize; ++i)
         add(ID_COLOR_BASE + i, swatch, kPaletteNames[i]);

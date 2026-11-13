@@ -28,6 +28,7 @@ A small, very fast, native Windows whiteboard: open a board, draw with pens, pan
 - **Grid**: lines / dots / off. **Size is selectable** (8, 16, 32, 64, 128 px, or a custom value). When zoomed far out, the grid adapts so it never turns into a solid gray mass.
 - **Undo / Redo** (Ctrl+Z / Ctrl+Y).
 - **Clear board**, **Reset view** (Home key).
+- **Swap middle / right mouse buttons** (`M` or right-click menu): pan on right-drag, and menu/erase on the middle button. Remembered in the session.
 - **Light / dark mode** (`D` or right-click menu). Starts in the same mode as Windows. The default ink flips color with the theme, so drawings stay visible in both.
 
 Out of scope for v1: text, shapes, images, selection/move, layers, multi-user.

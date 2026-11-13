@@ -11,7 +11,7 @@
 namespace {
 
 constexpr uint32_t kMagic = 0x44524257;  // "WBRD"
-constexpr uint32_t kVersion = 2;
+constexpr uint32_t kVersion = 3;
 constexpr uint32_t kFlagSession = 1;
 constexpr uint8_t kStrokeAutoInk = 1;
 constexpr uint32_t kMaxPathChars = 32768;
@@ -243,6 +243,7 @@ void SerializeBoard(const Board& board, const DocView& view, const SessionInfo* 
             w.Put(v);
         w.Put(static_cast<uint8_t>(session->maximized));
         w.Put(static_cast<uint8_t>(session->showHelp));
+        w.Put(static_cast<uint8_t>(session->swapButtons));
     }
 
     w.Put(static_cast<uint32_t>(board.LiveStrokes()));
@@ -331,6 +332,14 @@ bool LoadBoardFile(const std::wstring& path, std::vector<Stroke>& strokes, DocVi
             tmp.hasWindow = hasWindow != 0;
             tmp.maximized = maximized != 0;
             tmp.showHelp = showHelp != 0;
+        }
+        if (version >= 3) {
+            uint8_t swap = 0;
+            if (!r.Get(swap)) {
+                error = kDamaged;
+                return false;
+            }
+            tmp.swapButtons = swap != 0;
         }
         tmp.dark = dark != 0;
         tmp.colorIndex = color;

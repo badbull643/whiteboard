@@ -27,6 +27,7 @@ struct RenderParams {
     const wchar_t* benchText = nullptr;      // extra line(s) for the stats panel
     const wchar_t* toolName = nullptr;       // shown in the status bar
     bool showHint = true;                    // shortcut hint line (F1)
+    bool swapButtons = false;                // middle/right swapped (hint text)
     bool showEraser = false;                 // eraser circle at (eraserX, eraserY), client px
     float eraserX = 0.0f, eraserY = 0.0f, eraserRadiusPx = 0.0f;
 };

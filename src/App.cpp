@@ -302,6 +302,7 @@ void App::SaveSession(bool background)
     info.docPath = m_docPath;
     info.docModified = IsModified();
     info.showHelp = m_showHelp;
+    info.swapButtons = m_swapButtons;
     WINDOWPLACEMENT wp{ sizeof(wp) };
     if (m_fullscreen)
         wp = m_prevPlacement;  // where the window goes back to after fullscreen
@@ -354,6 +355,7 @@ void App::RestoreSession()
         }
     }
     m_showHelp = info.showHelp;
+    m_swapButtons = info.swapButtons;
     ApplyView(view);
     m_restoredView = view;
     SetDark(info.dark);
@@ -425,6 +427,7 @@ void App::RenderNow(bool waitForSwapChain)
     params.benchText = m_bench.result.empty() ? nullptr : m_bench.result.c_str();
     params.toolName = m_erasing || m_tool == Tool::Eraser ? L"Eraser" : L"Pen";
     params.showHint = m_showHelp;
+    params.swapButtons = m_swapButtons;
     if (EraserCursorVisible()) {
         params.showEraser = true;
         params.eraserX = m_mouse.x + 0.5f;
@@ -592,7 +595,7 @@ void App::PickCustomColor()
 void App::LayoutToolbar()
 {
     const POINT s = ClientSize();
-    m_toolbar.Layout(static_cast<float>(s.x), static_cast<float>(m_camera.dpiScale));
+    m_toolbar.Layout(static_cast<float>(s.x), static_cast<float>(m_camera.dpiScale), m_swapButtons);
 }
 
 void App::UpdateToolbarHover(int x, int y)
@@ -653,6 +656,14 @@ void App::ClearBoard()
 {
     if (!Busy() && m_board.Clear())  // one undo step brings everything back
         RequestRedraw();
+}
+
+void App::SetSwapButtons(bool swap)
+{
+    if (Busy())
+        return;  // never change button roles in the middle of a drag
+    m_swapButtons = swap;
+    RequestRedraw();  // hint line and tooltip text change
 }
 
 void App::SetTool(Tool tool)
@@ -745,6 +756,7 @@ void App::HandleCommand(UINT cmd)
     case ID_FULLSCREEN: ToggleFullscreen(); break;
     case ID_STATS: m_showStats = !m_showStats; break;
     case ID_HELP: m_showHelp = !m_showHelp; break;
+    case ID_SWAP_BUTTONS: SetSwapButtons(!m_swapButtons); break;
     case ID_UNDO: Undo(); break;
     case ID_REDO: Redo(); break;
     case ID_DARK: SetDark(!m_dark); break;
@@ -954,7 +966,7 @@ void App::ShowContextMenu(int screenX, int screenY)
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(menu, MF_STRING | (m_tool == Tool::Pen ? MF_CHECKED : 0u), ID_TOOL_PEN, L"Pen\tP");
     AppendMenuW(menu, MF_STRING | (m_tool == Tool::Eraser ? MF_CHECKED : 0u), ID_TOOL_ERASER,
-                L"Eraser\tE  (or right-drag)");
+                m_swapButtons ? L"Eraser\tE  (or middle-drag)" : L"Eraser\tE  (or right-drag)");
     AppendMenuW(menu, MF_STRING | (m_board.LiveStrokes() ? 0u : MF_GRAYED), ID_CLEAR, L"Clear board\tCtrl+Del");
     AppendMenuW(menu, MF_STRING, ID_COLOR_CUSTOM, L"Custom color...\t9");
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
@@ -963,6 +975,8 @@ void App::ShowContextMenu(int screenX, int screenY)
     AppendMenuW(menu, MF_STRING | (m_dark ? MF_CHECKED : 0u), ID_DARK, L"Dark mode\tD");
     AppendMenuW(menu, MF_STRING, ID_RESET_VIEW, L"Reset view\tHome");
     AppendMenuW(menu, MF_STRING | (m_fullscreen ? MF_CHECKED : 0u), ID_FULLSCREEN, L"Fullscreen\tF11");
+    AppendMenuW(menu, MF_STRING | (m_swapButtons ? MF_CHECKED : 0u), ID_SWAP_BUTTONS,
+                L"Swap middle / right mouse buttons\tM");
     AppendMenuW(menu, MF_STRING | (m_showHelp ? MF_CHECKED : 0u), ID_HELP, L"Show shortcuts\tF1");
     AppendMenuW(menu, MF_STRING | (m_showStats ? MF_CHECKED : 0u), ID_STATS, L"Show stats\tF3");
 
@@ -1014,6 +1028,23 @@ LRESULT CALLBACK App::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 LRESULT App::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    if (m_swapButtons && msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) {
+        // Swapped buttons: treat the right button as the middle one and vice versa, so
+        // every gesture below (pan, menu click, erase drag) follows the setting.
+        switch (msg) {
+        case WM_RBUTTONDOWN: msg = WM_MBUTTONDOWN; break;
+        case WM_RBUTTONUP:   msg = WM_MBUTTONUP; break;
+        case WM_MBUTTONDOWN: msg = WM_RBUTTONDOWN; break;
+        case WM_MBUTTONUP:   msg = WM_RBUTTONUP; break;
+        }
+        if (msg != WM_MOUSEWHEEL && msg != WM_MOUSEHWHEEL) {  // wheel wParam holds the delta in the high word
+            const WPARAM keys = wParam & 0xFFFF;
+            const WPARAM swapped = (keys & ~WPARAM(MK_RBUTTON | MK_MBUTTON)) |
+                                   ((keys & MK_RBUTTON) ? MK_MBUTTON : 0) | ((keys & MK_MBUTTON) ? MK_RBUTTON : 0);
+            wParam = (wParam & ~WPARAM(0xFFFF)) | swapped;
+        }
+    }
+
     switch (msg) {
     // ---- Window / rendering -------------------------------------------------
     case WM_SIZE:
@@ -1283,6 +1314,10 @@ LRESULT App::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
             return 0;
         case 'P':
             SetTool(Tool::Pen);
+            return 0;
+        case 'M':
+            if (!ctrl && !repeat)
+                SetSwapButtons(!m_swapButtons);
             return 0;
         case 'E':
             SetTool(Tool::Eraser);
