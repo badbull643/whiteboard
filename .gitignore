@@ -1,0 +1,12 @@
+# Build output
+build/
+build-*/
+out/
+
+# IDE / tools
+.vs/
+.vscode/
+*.user
+
+# Leftovers from interrupted saves
+*.wbd.tmp
